@@ -1,0 +1,45 @@
+html, body {
+    height: 100%; /* Убедитесь, что html и body занимают всю высоту экрана */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column; /* Используем flexbox для управления layout */
+}
+
+.container {
+    flex: 1; /* Container будет занимать все доступное пространство */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Центрирование контента по вертикали */
+}
+
+.category-card {
+    height: 10rem; /* Увеличиваем высоту карточек */
+    margin: 0.5rem 0; /* Добавляем вертикальные отступы */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    border-radius: 0.5rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.category-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2);
+}
+
+.footer {
+    padding: 1rem 0;
+    text-align: center;
+    background-color: #343a40;
+    color: white;
+}
+
+/* Добавляем отступ между последней кнопкой и футером */
+.content-box:last-child {
+    margin-bottom: 2rem;
+}

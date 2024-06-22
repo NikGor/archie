@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Documents List</h2>
+<ul>
+    {% for document in documents %}
+    <li>{{ document.title }} - {{ document.date }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

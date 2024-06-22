@@ -1,0 +1,19 @@
+# Python
+*.pyc
+__pycache__/
+
+# Environment
+.env
+
+# Django
+db.sqlite3
+/media/
+
+# Poetry
+poetry.lock
+
+# OS
+.DS_Store
+
+db.sqlite3
+.idea

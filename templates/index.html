@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- Hero секция -->
+<div class="container full-height d-flex flex-column justify-content-center">
+    <div class="row justify-content-center align-items-center text-center mb-4">
+        <div class="col-md-2 col-sm-4 mb-3">
+            <div class="category-card" style="background-color: orange;">Category 1</div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-3">
+            <div class="category-card" style="background-color: lightgreen;">Category 2</div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-3">
+            <div class="category-card" style="background-color: lightblue;">Category 3</div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-3">
+            <div class="category-card" style="background-color: pink;">Category 4</div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-3">
+            <div class="category-card" style="background-color: lightyellow;">Category 5</div>
+        </div>
+    </div>
+</div>
+
+<!-- Контентная секция -->
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-4 vertical-divider">
+            <h2>Upload Document</h2>
+            <p>Upload and organize your documents easily. Click the button below to start uploading your first document.</p>
+            <a href="{% url 'upload' %}" class="btn btn-success">Upload Document</a>
+        </div>
+        <div class="col-md-4 vertical-divider">
+            <h2>Create Task</h2>
+            <p>Manage your tasks efficiently. Click the button below to create a new task and stay organized.</p>
+            <a href="{% url 'task_create' %}" class="btn btn-primary">Create Task</a>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

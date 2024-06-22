@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Task List</h2>
+    <ul>
+        {% for task in object_list %}
+            <li>{{ task.title }} - {{ task.completed|yesno:"Done,Not Done" }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

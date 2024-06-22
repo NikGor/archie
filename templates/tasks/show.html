@@ -1,0 +1,7 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+  <h2>{{ object.title }}</h2>
+  <p>Uploaded at: {{ object.uploaded_at }}</p>
+  <a href="{{ object.file.url }}">Download</a>
+{% endblock %}
