@@ -1,10 +1,59 @@
+
 {% extends "base.html" %}
 
 {% block content %}
-<h2>Documents List</h2>
-<ul>
-    {% for document in documents %}
-    <li>{{ document.title }} - {{ document.date }}</li>
-    {% endfor %}
-</ul>
+<div class="container mt-4">
+    <h2 class="mb-4">Documents List</h2>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th scope="col">Title</th>
+                <th scope="col">Date</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for document in documents %}
+            <tr>
+                <td>{{ document.title }}</td>
+                <td>{{ document.date }}</td>
+                <td>
+                    <a href="{% url 'show_document' document.id %}" class="btn btn-sm btn-info">View</a>
+                    <a href="{% url 'edit_document' document.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    <!-- Trigger/Delete Button -->
+                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ document.id }}">
+                        Delete
+                    </button>
+                </td>
+            </tr>
+            <!-- Modal -->
+            <div class="modal fade" id="deleteModal{{ document.id }}" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete "{{ document.title }}"?
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <!-- Замените ссылку на форму -->
+                            <form method="post" action="{% url 'delete_document' document.id %}" style="display: inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>            
+            {% empty %}
+            <tr>
+                <td colspan="3">No documents found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

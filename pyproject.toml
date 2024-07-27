@@ -12,7 +12,13 @@ django = "^5.0.6"
 python-dotenv = "^1.0.1"
 dj-database-url = "^2.1.0"
 bootstrap4 = "^0.1.0"
+pdfplumber = "^0.11.2"
+langchain-openai = "^0.1.19"
+langchain = "^0.2.11"
 
+
+[tool.poetry.group.dev.dependencies]
+django-debug-toolbar = "^4.4.6"
 
 [build-system]
 requires = ["poetry-core"]

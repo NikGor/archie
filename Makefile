@@ -3,6 +3,9 @@
 install:
 	poetry install
 
+check:
+	poetry run python manage.py check
+
 test:
 	poetry run python manage.py test
 
@@ -14,6 +17,10 @@ run:
 
 clean:
 	find . -name "*.pyc" -delete
+
+migrate:
+	poetry run python manage.py makemigrations
+	poetry run python manage.py migrate
 
 add-and-commit:
 	git add .
