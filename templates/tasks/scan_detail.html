@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Сессия сканирования #{{ scan_session.id }} - Archie DMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Заголовок -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="h3 mb-0">
+                        <i class="fas fa-scanner me-2"></i>
+                        Сессия сканирования #{{ scan_session.id }}
+                    </h1>
+                    <p class="text-muted mb-0">
+                        Создано: {{ scan_session.created_at|date:"d.m.Y H:i:s" }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{% url 'scan_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Назад к списку
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Основная информация -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Информация о сессии</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Название:</dt>
+                                        <dd class="col-sm-8">
+                                            {% if scan_session.title %}
+                                                {{ scan_session.title }}
+                                            {% else %}
+                                                <span class="text-muted">Не указано</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">Статус:</dt>
+                                        <dd class="col-sm-8">
+                                            {% if scan_session.status == 'pending' %}
+                                                <span class="badge bg-warning">Ожидает</span>
+                                            {% elif scan_session.status == 'scanning' %}
+                                                <span class="badge bg-info">Сканирование</span>
+                                            {% elif scan_session.status == 'processing' %}
+                                                <span class="badge bg-primary">Обработка</span>
+                                            {% elif scan_session.status == 'completed' %}
+                                                <span class="badge bg-success">Завершено</span>
+                                            {% elif scan_session.status == 'failed' %}
+                                                <span class="badge bg-danger">Ошибка</span>
+                                            {% endif %}
+                                        </dd>
+                                        
+                                        <dt class="col-sm-4">Сканер:</dt>
+                                        <dd class="col-sm-8">
+                                            {% if scan_session.scanner_name %}
+                                                {{ scan_session.scanner_name }}
+                                            {% else %}
+                                                <span class="text-muted">Автовыбор</span>
+                                            {% endif %}
+                                        </dd>
+                                    </dl>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <dl class="row">
+                                        <dt class="col-sm-4">Разрешение:</dt>
+                                        <dd class="col-sm-8">{{ scan_session.resolution }} DPI</dd>
+                                        
+                                        <dt class="col-sm-4">Создано:</dt>
+                                        <dd class="col-sm-8">{{ scan_session.created_at|date:"d.m.Y H:i" }}</dd>
+                                        
+                                        {% if scan_session.completed_at %}
+                                            <dt class="col-sm-4">Завершено:</dt>
+                                            <dd class="col-sm-8">{{ scan_session.completed_at|date:"d.m.Y H:i" }}</dd>
+                                        {% endif %}
+                                    </dl>
+                                </div>
+                            </div>
+                            
+                            {% if scan_session.error_message %}
+                                <div class="alert alert-danger mt-3">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Ошибка
+                                    </h6>
+                                    <p class="mb-0">{{ scan_session.error_message }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Действия -->
+                            <div class="mt-4">
+                                {% if scan_session.status == 'pending' %}
+                                    <button class="btn btn-success scan-execute-btn" data-session-id="{{ scan_session.id }}">
+                                        <i class="fas fa-play me-2"></i>
+                                        Выполнить сканирование
+                                    </button>
+                                {% elif scan_session.status == 'scanning' or scan_session.status == 'processing' %}
+                                    <div class="d-flex align-items-center">
+                                        <div class="spinner-border text-primary me-2" role="status">
+                                            <span class="visually-hidden">Загрузка...</span>
+                                        </div>
+                                        <span>Выполняется сканирование...</span>
+                                    </div>
+                                {% elif scan_session.status == 'completed' %}
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        Сканирование успешно завершено!
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Боковая панель -->
+                <div class="col-lg-4">
+                    <!-- Результат сканирования -->
+                    {% if scan_session.document %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">
+                                    <i class="fas fa-file me-2"></i>
+                                    Результат
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <h6>{{ scan_session.document.title }}</h6>
+                                <p class="text-muted small">{{ scan_session.document.category }}</p>
+                                <p class="small">{{ scan_session.document.text|truncatewords:20 }}</p>
+                                
+                                <div class="d-grid gap-2">
+                                    <a href="{% url 'document_detail' scan_session.document.id %}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-eye me-2"></i>
+                                        Просмотреть документ
+                                    </a>
+                                    <a href="{{ scan_session.document.scan.url }}" 
+                                       class="btn btn-outline-secondary btn-sm" target="_blank">
+                                        <i class="fas fa-download me-2"></i>
+                                        Скачать файл
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Быстрые действия -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Действия</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{% url 'scan_create' %}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Новое сканирование
+                                </a>
+                                <a href="{% url 'scan_list' %}" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fas fa-list me-2"></i>
+                                    Все сессии
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Обработка кнопки выполнения сканирования
+    const executeBtn = document.querySelector('.scan-execute-btn');
+    if (executeBtn) {
+        executeBtn.addEventListener('click', function() {
+            const sessionId = this.dataset.sessionId;
+            executeScan(sessionId);
+        });
+    }
+    
+    function executeScan(sessionId) {
+        const btn = document.querySelector(`[data-session-id="${sessionId}"]`);
+        const originalContent = btn.innerHTML;
+        
+        // Показываем индикатор загрузки
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Выполняется...';
+        btn.disabled = true;
+        
+        // Отправляем запрос на выполнение сканирования
+        fetch(`/tasks/scan/${sessionId}/execute/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showAlert('success', data.message);
+                // Перезагружаем страницу через 2 секунды
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            } else {
+                showAlert('danger', data.message);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            showAlert('danger', 'Произошла ошибка при выполнении сканирования');
+            btn.innerHTML = originalContent;
+            btn.disabled = false;
+        });
+    }
+    
+    function showAlert(type, message) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(alertDiv, container.firstChild);
+        
+        // Автоматически скрываем через 5 секунд
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 5000);
+    }
+    
+    // Автообновление статуса для активных сессий
+    {% if scan_session.status == 'scanning' or scan_session.status == 'processing' %}
+        const statusInterval = setInterval(() => {
+            fetch(`/tasks/scan/{{ scan_session.id }}/status/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'completed' || data.status === 'failed') {
+                        clearInterval(statusInterval);
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Ошибка при проверке статуса:', error);
+                });
+        }, 2000);
+    {% endif %}
+});
+</script>
+{% endblock %} 

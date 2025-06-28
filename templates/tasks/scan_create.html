@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+
+{% block title %}Новое сканирование - Archie DMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">
+                        <i class="fas fa-scanner me-2"></i>
+                        Новое сканирование документа
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.title.id_for_label }}" class="form-label">
+                                        {{ form.title.label }}
+                                    </label>
+                                    {{ form.title }}
+                                    {% if form.title.help_text %}
+                                        <div class="form-text">{{ form.title.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.title.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.title.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.resolution.id_for_label }}" class="form-label">
+                                        {{ form.resolution.label }}
+                                    </label>
+                                    {{ form.resolution }}
+                                    {% if form.resolution.help_text %}
+                                        <div class="form-text">{{ form.resolution.help_text }}</div>
+                                    {% endif %}
+                                    {% if form.resolution.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {% for error in form.resolution.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.scanner_name.id_for_label }}" class="form-label">
+                                {{ form.scanner_name.label }}
+                            </label>
+                            {{ form.scanner_name }}
+                            {% if form.scanner_name.help_text %}
+                                <div class="form-text">{{ form.scanner_name.help_text }}</div>
+                            {% endif %}
+                            {% if form.scanner_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.scanner_name.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Информационная панель -->
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Информация о сканировании
+                            </h6>
+                            <ul class="mb-0">
+                                <li>Убедитесь, что сканер подключен и включен</li>
+                                <li>Поместите документ в сканер лицевой стороной вниз</li>
+                                <li>Рекомендуемое разрешение: 300 DPI для документов, 600 DPI для изображений</li>
+                                <li>После создания сессии нажмите кнопку "Выполнить" для начала сканирования</li>
+                                <li>Документ будет автоматически проанализирован с помощью ИИ</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'scan_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>
+                                Назад к списку
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>
+                                Создать сессию
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Панель доступных сканеров -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list me-2"></i>
+                        Доступные сканеры
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="scannerList">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Загрузка...</span>
+                            </div>
+                            <p class="mt-2">Поиск доступных сканеров...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Загружаем список доступных сканеров
+    loadAvailableScanners();
+    
+    function loadAvailableScanners() {
+        fetch('/tasks/scan/scanners/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const scannerList = document.getElementById('scannerList');
+            
+            if (data.scanners && data.scanners.length > 0) {
+                let html = '<div class="row">';
+                data.scanners.forEach(scanner => {
+                    html += `
+                        <div class="col-md-6 mb-2">
+                            <div class="card border-success">
+                                <div class="card-body py-2">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        <div>
+                                            <strong>${scanner.name}</strong>
+                                            <br>
+                                            <small class="text-muted">${scanner.type}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                scannerList.innerHTML = html;
+            } else {
+                scannerList.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Сканеры не найдены. Убедитесь, что сканер подключен и драйверы установлены.
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка при загрузке сканеров:', error);
+            document.getElementById('scannerList').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-times-circle me-2"></i>
+                    Ошибка при поиске сканеров. Проверьте подключение.
+                </div>
+            `;
+        });
+    }
+});
+</script>
+{% endblock %} 
