@@ -1,24 +1,405 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Загрузить документ - Archie DMS{% endblock %}
 
 {% block content %}
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header bg-primary text-white">
-                        <h2>Upload New Document</h2>
-                    </div>
-                    <div class="card-body">
-                        <form method="post" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            {{ form.as_p }}
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-success">Upload</button>
+<div class="upload-container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <!-- Заголовок страницы -->
+            <div class="upload-header text-center mb-5">
+                <div class="upload-icon mb-3">
+                    <i class="bi bi-cloud-upload-fill"></i>
+                </div>
+                <h1 class="upload-title">Загрузить новый документ</h1>
+                <p class="upload-subtitle text-muted">
+                    Добавьте документ в систему Archie для дальнейшей обработки и организации
+                </p>
+            </div>
+
+            <!-- Форма загрузки -->
+            <div class="upload-form-card">
+                <form method="post" enctype="multipart/form-data" class="upload-form" id="documentForm">
+                    {% csrf_token %}
+                    
+                    <!-- Drag & Drop зона -->
+                    <div class="drag-drop-zone mb-4" id="dragDropZone">
+                        <div class="drag-drop-content">
+                            <i class="bi bi-file-earmark-text drag-drop-icon"></i>
+                            <h4 class="drag-drop-title">Перетащите файл сюда</h4>
+                            <p class="drag-drop-subtitle">или нажмите для выбора файла</p>
+                            <input type="file" name="scan" id="fileInput" class="file-input" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png" style="display: none;">
+                            <button type="button" class="btn btn-outline-primary btn-lg" onclick="document.getElementById('fileInput').click()">
+                                <i class="bi bi-folder2-open"></i> Выбрать файл
+                            </button>
+                        </div>
+                        <div class="file-preview" id="filePreview" style="display: none;">
+                            <div class="file-info">
+                                <i class="bi bi-file-earmark-text file-icon"></i>
+                                <div class="file-details">
+                                    <span class="file-name" id="fileName"></span>
+                                    <span class="file-size" id="fileSize"></span>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFile()">
+                                    <i class="bi bi-x"></i>
+                                </button>
                             </div>
-                        </form>
+                        </div>
+                    </div>
+
+                    <!-- Поле автогенерации -->
+                    <div class="auto-generate-section mb-4">
+                        <div class="form-check">
+                            {{ form.auto_generate }}
+                            <label class="form-check-label" for="{{ form.auto_generate.id_for_label }}">
+                                <i class="bi bi-robot"></i> {{ form.auto_generate.label }}
+                            </label>
+                            {% if form.auto_generate.help_text %}
+                                <div class="form-text">
+                                    <i class="bi bi-info-circle"></i> {{ form.auto_generate.help_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Основные поля формы -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                <i class="bi bi-type-bold"></i> Название документа *
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.title.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.title.help_text %}
+                                <div class="form-text">
+                                    {{ form.title.help_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">
+                                <i class="bi bi-tags"></i> Категория *
+                            </label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.category.errors.0 }}
+                                </div>
+                            {% endif %}
+                            {% if form.category.help_text %}
+                                <div class="form-text">
+                                    {{ form.category.help_text }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Описание документа -->
+                    <div class="mb-4">
+                        <label for="{{ form.text.id_for_label }}" class="form-label">
+                            <i class="bi bi-text-paragraph"></i> Описание документа
+                        </label>
+                        {{ form.text }}
+                        {% if form.text.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.text.errors.0 }}
+                            </div>
+                        {% endif %}
+                        {% if form.text.help_text %}
+                            <div class="form-text">
+                                {{ form.text.help_text }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Кнопки действий -->
+                    <div class="upload-actions">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <a href="{% url 'documents' %}" class="btn btn-outline-secondary btn-lg w-100">
+                                    <i class="bi bi-arrow-left"></i> Назад к документам
+                                </a>
+                            </div>
+                            <div class="col-md-6 mb-2">
+                                <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                                    <i class="bi bi-cloud-upload"></i> Загрузить документ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Информационная панель -->
+            <div class="upload-info mt-4">
+                <div class="row">
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="info-item">
+                            <i class="bi bi-shield-check text-success"></i>
+                            <h6>Безопасная загрузка</h6>
+                            <small class="text-muted">Ваши документы защищены</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="info-item">
+                            <i class="bi bi-lightning text-warning"></i>
+                            <h6>Быстрая обработка</h6>
+                            <small class="text-muted">Автоматическая индексация</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="info-item">
+                            <i class="bi bi-robot text-info"></i>
+                            <h6>ИИ анализ</h6>
+                            <small class="text-muted">Автоматическая генерация метаданных</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 text-center mb-3">
+                        <div class="info-item">
+                            <i class="bi bi-search text-primary"></i>
+                            <h6>Умный поиск</h6>
+                            <small class="text-muted">Легко найти любой документ</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<style>
+.upload-container {
+    padding: 2rem 0;
+}
+
+.upload-header {
+    margin-bottom: 3rem;
+}
+
+.upload-icon {
+    font-size: 4rem;
+    color: #007bff;
+}
+
+.upload-title {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.upload-subtitle {
+    font-size: 1.1rem;
+}
+
+.upload-form-card {
+    background: #fff;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.drag-drop-zone {
+    border: 3px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+}
+
+.drag-drop-zone:hover,
+.drag-drop-zone.dragover {
+    border-color: #007bff;
+    background: #e3f2fd;
+}
+
+.drag-drop-icon {
+    font-size: 3rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.drag-drop-title {
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.drag-drop-subtitle {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.file-preview {
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-icon {
+    font-size: 2rem;
+    color: #007bff;
+}
+
+.file-details {
+    flex: 1;
+}
+
+.file-name {
+    display: block;
+    font-weight: 600;
+    color: #495057;
+}
+
+.file-size {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.auto-generate-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 1.5rem;
+    border-left: 4px solid #007bff;
+}
+
+.info-item {
+    padding: 1rem;
+}
+
+.info-item i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.info-item h6 {
+    margin-bottom: 0.25rem;
+    color: #495057;
+}
+
+.upload-actions {
+    border-top: 1px solid #dee2e6;
+    padding-top: 2rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .upload-form-card {
+        padding: 1.5rem;
+    }
+    
+    .drag-drop-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-info .col-md-3 {
+        margin-bottom: 1rem;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const dragDropZone = document.getElementById('dragDropZone');
+    const fileInput = document.getElementById('fileInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    
+    // Drag & Drop функциональность
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dragDropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight(e) {
+        dragDropZone.classList.add('dragover');
+    }
+    
+    function unhighlight(e) {
+        dragDropZone.classList.remove('dragover');
+    }
+    
+    dragDropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+    
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+    
+    function handleFiles(files) {
+        if (files.length > 0) {
+            const file = files[0];
+            displayFileInfo(file);
+            fileInput.files = files;
+        }
+    }
+    
+    function displayFileInfo(file) {
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        filePreview.style.display = 'block';
+        dragDropZone.querySelector('.drag-drop-content').style.display = 'none';
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+    
+    window.removeFile = function() {
+        fileInput.value = '';
+        filePreview.style.display = 'none';
+        dragDropZone.querySelector('.drag-drop-content').style.display = 'block';
+    };
+    
+    // Валидация формы
+    const form = document.getElementById('documentForm');
+    form.addEventListener('submit', function(e) {
+        if (!fileInput.files.length) {
+            e.preventDefault();
+            alert('Пожалуйста, выберите файл для загрузки');
+            return false;
+        }
+        
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Загрузка...';
+    });
+});
+</script>
 {% endblock %}

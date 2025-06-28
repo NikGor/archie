@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load document_filters %}
+
+{% block title %}{{ document.title }} - Archie DMS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Заголовок и навигация -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'documents' %}">Документы</a></li>
+                            <li class="breadcrumb-item active">{{ document.title }}</li>
+                        </ol>
+                    </nav>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'documents' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Назад к списку
+                    </a>
+                    <a href="{{ document.scan.url }}" class="btn btn-outline-primary" target="_blank">
+                        <i class="fas fa-download me-2"></i>
+                        Скачать
+                    </a>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Основная информация -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="card-title mb-0">{{ document.title }}</h4>
+                                <span class="badge bg-primary">{{ document.category }}</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <strong>Категория:</strong>
+                                    <p class="text-muted">{{ document.category }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Дата загрузки:</strong>
+                                    <p class="text-muted">{{ document.date|date:"d.m.Y" }}</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Описание:</strong>
+                                <p class="text-muted">{{ document.text|linebreaks }}</p>
+                            </div>
+                            
+                            {% if document.scan %}
+                            <div class="mb-3">
+                                <strong>Файл:</strong>
+                                <p class="text-muted">
+                                    <i class="fas fa-file me-2"></i>
+                                    <a href="{{ document.scan.url }}" target="_blank">
+                                        {{ document.scan.name|filename|truncate_filename:50 }}
+                                    </a>
+                                    <small class="text-muted">({{ document.scan.size|filesizeformat }})</small>
+                                </p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Превью документа -->
+                    {% if document.scan %}
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">
+                                <i class="fas fa-eye me-2"></i>
+                                Превью документа
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if document.scan.name|is_pdf %}
+                                <embed src="{{ document.scan.url }}" type="application/pdf" width="100%" height="600px">
+                            {% elif document.scan.name|is_image %}
+                                <img src="{{ document.scan.url }}" class="img-fluid" alt="Превью документа">
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Превью недоступно для данного типа файла</p>
+                                    <a href="{{ document.scan.url }}" class="btn btn-primary" target="_blank">
+                                        <i class="fas fa-download me-2"></i>
+                                        Скачать файл
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Боковая панель -->
+                <div class="col-lg-4">
+                    <!-- Действия -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Действия</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{{ document.scan.url }}" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-download me-2"></i>
+                                    Скачать документ
+                                </a>
+                                <a href="{% url 'document_upload' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Загрузить новый
+                                </a>
+                                <a href="{% url 'scan_create' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-scanner me-2"></i>
+                                    Сканировать документ
+                                </a>
+                                <hr>
+                                <button class="btn btn-outline-danger" onclick="deleteDocument({{ document.id }})">
+                                    <i class="fas fa-trash me-2"></i>
+                                    Удалить документ
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Метаданные -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Метаданные</h5>
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">ID:</dt>
+                                <dd class="col-sm-8">{{ document.id }}</dd>
+                                
+                                <dt class="col-sm-4">Создан:</dt>
+                                <dd class="col-sm-8">{{ document.date|date:"d.m.Y" }}</dd>
+                                
+                                {% if document.scan %}
+                                <dt class="col-sm-4">Размер:</dt>
+                                <dd class="col-sm-8">{{ document.scan.size|filesizeformat }}</dd>
+                                
+                                <dt class="col-sm-4">Тип:</dt>
+                                <dd class="col-sm-8">{{ document.scan.name|file_extension|default:"Файл" }}</dd>
+                                {% endif %}
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно подтверждения удаления -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Подтверждение удаления</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить документ "{{ document.title }}"?</p>
+                <p class="text-muted small">Это действие нельзя отменить.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-danger" id="confirmDelete">Удалить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Удаление документа
+    window.deleteDocument = function(documentId) {
+        const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+        modal.show();
+    };
+    
+    // Подтверждение удаления
+    document.getElementById('confirmDelete').addEventListener('click', function() {
+        fetch(`/documents/{{ document.id }}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = '{% url "documents" %}';
+            } else {
+                alert('Ошибка при удалении документа');
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            alert('Ошибка при удалении документа');
+        });
+    });
+});
+</script>
+{% endblock %} 
