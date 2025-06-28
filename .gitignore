@@ -18,4 +18,5 @@ poetry.lock
 db.sqlite3
 .idea
 
-/documents
+# Documents
+/documents/
