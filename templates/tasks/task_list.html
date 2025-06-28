@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Задачи - Archie DMS{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Список задач</h2>
+        <a href="{% url 'task_create' %}" class="btn btn-success">Создать задачу</a>
+    </div>
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-3">
+            <input type="text" name="q" class="form-control" placeholder="Поиск по названию..." value="{{ request.GET.q }}">
+        </div>
+        <div class="col-md-3">
+            <select name="status" class="form-select">
+                <option value="">Все статусы</option>
+                {% for key, value in tasks.model.Status.choices %}
+                    <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="type" class="form-select">
+                <option value="">Все типы</option>
+                {% for key, value in tasks.model.Type.choices %}
+                    <option value="{{ key }}" {% if request.GET.type == key %}selected{% endif %}>{{ value }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-outline-primary w-100">Фильтровать</button>
+        </div>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Название</th>
+                    <th>Тип</th>
+                    <th>Статус</th>
+                    <th>Документ</th>
+                    <th>Создана</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for task in tasks %}
+                <tr>
+                    <td><a href="{% url 'task_detail' task.pk %}">{{ task.title }}</a></td>
+                    <td>{{ task.get_type_display }}</td>
+                    <td>
+                        {% if task.status == 'done' %}
+                            <span class="badge bg-success">{{ task.get_status_display }}</span>
+                        {% elif task.status == 'error' %}
+                            <span class="badge bg-danger">{{ task.get_status_display }}</span>
+                        {% elif task.status == 'in_progress' %}
+                            <span class="badge bg-warning text-dark">{{ task.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ task.get_status_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if task.document %}
+                            <a href="{% url 'document_detail' task.document.pk %}">{{ task.document.title }}</a>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ task.created_at|date:"d.m.Y H:i" }}</td>
+                    <td>
+                        <a href="{% url 'task_detail' task.pk %}" class="btn btn-sm btn-outline-primary">Просмотр</a>
+                        <a href="{% url 'task_edit' task.pk %}" class="btn btn-sm btn-outline-secondary">Редактировать</a>
+                        <a href="{% url 'task_delete' task.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center">Нет задач</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if is_paginated %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Назад</a></li>
+            {% endif %}
+            {% for num in paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Вперёд</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %} 
